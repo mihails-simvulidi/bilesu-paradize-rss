@@ -46,12 +46,16 @@ def rss_proxy(path: str):
     # Extract event items
     event_elements = soup.find_all("div", attrs={"role": "listitem"})
     for event_element in event_elements:
-        link_element = event_element.find("a", class_="scoped-date")
+        date_link = event_element.find("a", class_="scoped-date")
         item = ET.SubElement(channel, "item")
-        event_url = urljoin(BASE_URL, link_element["href"])
+        event_name = event_element.find("span", class_="md:text-lg").text
+        event_url = urljoin(BASE_URL, date_link["href"])
+        event_status = event_element.find("a", class_="button").text
         ET.SubElement(item, "guid").text = event_url
         ET.SubElement(item, "link").text = event_url
-        ET.SubElement(item, "title").text = link_element.text
+        ET.SubElement(
+            item, "title"
+        ).text = f"{event_name} {date_link.text} {event_status}"
 
     # Return the RSS feed as XML
     ET.indent(rss, space="  ")
