@@ -1,0 +1,6 @@
+beautifulsoup4
+fake-useragent
+Flask
+gunicorn
+requests
+types-beautifulsoup4
