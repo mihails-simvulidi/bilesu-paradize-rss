@@ -1,25 +1,27 @@
 # bilesu-paradize-rss
 
-A small Flask service that converts pages from [bilesuparadize.lv](https://www.bilesuparadize.lv) into an RSS 2.0 feed.
+A small AI generated Python Flask service that converts location and performance listings from bilesuparadize.lv into an RSS 2.0 feed.
 
 ## What it does
 
-- Accepts a path like `/lv/performance/12345`
-- Fetches the corresponding page from `https://www.bilesuparadize.lv`
-- Parses event entries from HTML (`div[role="listitem"]`)
-- Returns an RSS XML document with event links and titles
+- Accepts a path like `/location/38` or `/performance/33206`
+- Always uses Latvian (`lv`) upstream data and link paths
+- Uses the upstream venue JSON API behind `https://www.bilesuparadize.lv/lv/location/38?page=1&showOnlyAvailable=true`
+- Includes all currently available events for the venue in one feed
+- Generates an RSS feed where the channel title comes from the venue page and items point to the individual event pages
 
 ## Endpoints
 
 - `GET /`
   - Plain-text usage hint
-- `GET /<lang>/<category>/<id>` (implemented as `GET /<path:path>`)
+- `GET /location/<id>`
+- `GET /performance/<id>`
   - Returns RSS XML (`application/rss+xml; charset=utf-8`)
 
 Example:
 
 ```bash
-curl http://localhost:8080/lv/performance/12345
+curl http://localhost/location/38
 ```
 
 ## Local development
@@ -35,15 +37,13 @@ curl http://localhost:8080/lv/performance/12345
 pip install -r requirements.txt
 ```
 
-### Run with Flask (development)
+### Run locally
 
 ```bash
 python app.py
 ```
 
-The app listens on port `80` in this mode.
-
-### Run with Gunicorn (production-like)
+### Run with Gunicorn
 
 ```bash
 gunicorn --bind 0.0.0.0:80 app:app
@@ -60,29 +60,13 @@ docker build -t bilesu-paradize-rss .
 ### Run container
 
 ```bash
-docker run --rm -p 8080:80 bilesu-paradize-rss
+docker run --rm -p 80:80 bilesu-paradize-rss
 ```
 
-Then open:
+Then open `http://localhost:80/location/38`.
 
-- `http://localhost:8080/`
-- `http://localhost:8080/lv/performance/12345`
+## Notes
 
-## CI/CD
-
-GitHub Actions workflow at `.github/workflows/docker-publish.yml` builds the Docker image on push and pull requests, and publishes to GHCR on non-PR events.
-
-Registry/image naming is based on:
-
-- `ghcr.io/<owner>/<repo>`
-
-## Notes and limitations
-
-- RSS items currently include `guid`, `link`, and `title`.
-- The feed does not include `pubDate` or full descriptions.
-- Output depends on the current HTML structure of bilesuparadize.lv.
-- If upstream markup changes, parser updates may be required.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+- The upstream site is protected by Cloudflare; this service uses `curl_cffi` with browser impersonation and the venue JSON API instead of scraping rendered HTML.
+- Event titles are built from the upstream event payload and formatted as a single Latvian title line with date and availability status.
+- If the upstream markup or anti-bot protection changes, the parser may need to be adjusted.

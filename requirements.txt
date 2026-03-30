@@ -1,5 +1,4 @@
-beautifulsoup4
+curl_cffi
 Flask
 gunicorn
-requests
-types-beautifulsoup4
+pytest
